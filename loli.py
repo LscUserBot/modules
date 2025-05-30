@@ -18,5 +18,5 @@ async def secret(client, message):
 
 
 modules_help['LoliHentai'] = {
-  "lh": "Получить фото[LH]"
+  "lh": "Получить фото [LH]"
 }
