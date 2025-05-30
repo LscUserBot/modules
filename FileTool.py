@@ -5,7 +5,7 @@ from pathlib import Path
 
 #meta name: FileTool
 #meta description: Инструменты для работы с файлами и папками
-#meta developer: @zxcsolomka
+#meta developer: @lscmods
 #meta img: https://cdn-icons-png.flaticon.com/512/2587/2587054.png
 
 def generate_random_folder_name(length=8):
