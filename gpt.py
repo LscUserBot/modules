@@ -1,6 +1,10 @@
 from utils.imports import *
 from utils.func import *
 from g4f.client import Client as GPTClient
+import os
+import io
+import random
+import string
 
 #meta name: AI
 #meta description: Легкий карманный AI который поможет вам с вашими задачами!
@@ -47,7 +51,7 @@ async def gpt_command(client, message):
         await client.send_document(
             chat_id=message.chat.id,
             document=file,
-            caption=f"[✏️] Ваш запрос: <code>{user_query}</code>\n\n[🤖] Ответ слишком длинный, поэтому я записал его в файл."
+            caption=f"[🤖] Ответ слишком длинный, поэтому я записал его в файл."
         )
         await message.delete()
     else:
