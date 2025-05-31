@@ -38,25 +38,20 @@ async def gpt_command(client, message):
 
     reply = generate_gpt_response(user_query)
 
-    if len(reply) > 4096:
-        random_suffix = generate_random_string(5)
-        file_name = f"gpt_answer_{random_suffix}.txt"
+    full_text = f"[✏️] Ваш запрос: <code>{user_query}</code>\n\n[🤖] Ответ: <b>{reply}</b>"
+    
+    if len(full_text) > 4096:
+        file = io.BytesIO(reply.encode())
+        file.name = f"gpt_answer_{generate_random_string(5)}.txt"
         
-        with open(file_name, "w", encoding="utf-8") as f:
-            f.write(reply)
-
         await client.send_document(
             chat_id=message.chat.id,
-            document=file_name,
+            document=file,
             caption=f"[✏️] Ваш запрос: <code>{user_query}</code>\n\n[🤖] Ответ слишком длинный, поэтому я записал его в файл."
         )
-
-        if os.path.exists(file_name):
-            os.remove(file_name)
-
         await message.delete()
     else:
-        await message.edit(f"[✏️] Ваш запрос: <code>{user_query}</code>\n\n[🤖] Ответ: <b>{reply[:4096]}</b>")
+        await message.edit(full_text[:4096])
 
 modules_help['AI'] = {
   "gpt": "Задать вопрос"
