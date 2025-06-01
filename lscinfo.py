@@ -246,7 +246,6 @@ async def user_info(client: Client, message: Message):
             await message.edit_text("❌ Укажите пользователя (ID/username) или ответьте на сообщение!")
             return
 
-        # Получаем информацию о чате (био и т.д.)
         target_user1 = await client.get_chat(target_user.id)
 
         await message.edit_text('[👀] Ищу информацию...')
