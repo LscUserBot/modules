@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 #meta name: LscInfo
 #meta developer: @lscmods
 #meta description: Команды связанные с информацией о пользователях/группах/сообщениях и т.д.
-#meta img: https://github.com/LscUserBot/modules/blob/main/img/lscinfoimg.png?raw=true
+#meta img: https://github.com/LscUserBot/modules/blob/main/img/lscinfo.png?raw=true
 #meta libs: numpy, python-dateutil
 
 data = {
@@ -227,65 +227,73 @@ async def get_chat_members_count(client, chat_id):
         return "Неизвестно"
 
 
-@app.on_message(filters.command("user", prefix) & filters.user(allow))
+@app.on_message(filters.command("user", prefixes=prefix) & filters.user(allow))
 async def user_info(client: Client, message: Message):
     try:
+        target_user = None
+        user_arg = None
+
         if len(message.command) > 1:
             user_arg = message.command[1]
-
             try:
-                entity = await client.get_users(user_arg)
-                entity1 = await client.get_chat(user_arg)
+                target_user = await client.get_users(user_arg)
             except Exception as e:
-                await message.edit_text("❌ Это не пользователь!")
+                await message.edit_text("❌ Пользователь не найден!")
                 return
         elif message.reply_to_message and message.reply_to_message.from_user:
-            entity = message.reply_to_message.from_user
-            entity1 = entity
+            target_user = message.reply_to_message.from_user
         else:
-            await message.edit_text("❌ Укажите пользователя или ответьте на сообщение!")
+            await message.edit_text("❌ Укажите пользователя (ID/username) или ответьте на сообщение!")
             return
 
-        if hasattr(entity1, "type") and "private" not in str(entity1.type).lower():
-            await message.edit_text("❌ Это не пользователь!")
-            return
-        
+        # Получаем информацию о чате (био и т.д.)
+        target_user1 = await client.get_chat(target_user.id)
+
         await message.edit_text('[👀] Ищу информацию...')
 
-        reg_date = estimate_registration_date(entity.id)
+        reg_date = estimate_registration_date(target_user.id)
         age_str = calculate_age(reg_date)
-        dc_id = entity.dc_id if hasattr(entity, 'dc_id') else "Неизвестно"
+
+        dc_id = target_user.dc_id if hasattr(target_user, 'dc_id') and target_user.dc_id else "Неизвестно"
 
         info_text = f"""<b><emoji id=6030563507299160824>❗️</emoji> Информация о пользователе:
-» ID: <code>{entity.id}</code>
-» Имя: <code>{entity.first_name} {entity.last_name or ''}</code>
-» Premium: <code>{'✅' if entity.is_premium else '❌'}</code>
+» ID: <code>{target_user.id}</code>
+» Имя: <code>{target_user.first_name} {target_user.last_name or ''}</code>
+» Premium: <code>{'✅' if target_user.is_premium else '❌'}</code>
 » DC ID: <code>{dc_id}</code>
 » Дата регистрации: <code>{reg_date}</code>
 » Возраст аккаунта: <code>{age_str}</code>"""
 
-        if entity.username:
-            info_text += f"\n» Username: @{entity.username}"
-        if hasattr(entity1, 'bio') and entity1.bio:
-            info_text += f"\n» Bio: <code>{entity1.bio}</code>"
+        if target_user.username:
+            info_text += f"\n» Username: @{target_user.username}"
+
+        if hasattr(target_user1, 'bio') and target_user1.bio:
+            info_text += f"\n» Bio: <code>{target_user1.bio}</code>"
 
         info_text += "</b>"
 
-        photo = None
-        async for p in client.get_chat_photos(entity.id, limit=1):
-            photo = await client.download_media(p.file_id)
+        photo_path = None
+        async for p in client.get_chat_photos(target_user.id, limit=1):
+            photo_path = await client.download_media(p.file_id)
             break
 
-        if photo:
-            await client.send_photo(message.chat.id, photo, caption=info_text)
+        if photo_path:
+            await client.send_photo(
+                message.chat.id,
+                photo_path,
+                caption=info_text
+            )
             await message.delete()
-            os.remove(photo)
+            os.remove(photo_path)
         else:
             await message.edit_text(info_text)
 
     except Exception as e:
         print(f"⚠️ Ошибка в .user: {e}")
-        await message.edit_text(f"❌ Ошибка: {str(e)}")
+        try:
+            await message.edit_text(f"❌ Произошла ошибка: <code>{str(e)}</code>")
+        except:
+            await message.reply_text(f"❌ Произошла ошибка: <code>{str(e)}</code>")
 
 
 @app.on_message(filters.command("cinfo", prefix) & filters.user(allow))
